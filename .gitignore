@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.env
+documents.db
+uploads/
+samples/out/
+.venv/
+venv/
+.claude/
+check-this-assignment-message-memoized-duckling.md

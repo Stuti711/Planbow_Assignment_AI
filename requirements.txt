@@ -1,0 +1,12 @@
+fastapi
+uvicorn[standard]
+python-multipart
+sqlmodel
+google-genai
+pydantic
+python-dotenv
+python-docx
+streamlit
+httpx
+pandas
+reportlab
