@@ -1,8 +1,5 @@
-"""Thin wrapper around the google-genai client.
-
-All model calls go through generate_structured(): document content in,
-schema-validated Pydantic instance out. temperature=0 for repeatability.
-"""
+"""Gemini client wrapper. Every call goes through generate_structured():
+document in, schema-validated Pydantic object out."""
 import re
 import threading
 import time
@@ -16,8 +13,7 @@ from ..config import settings
 
 _client: genai.Client | None = None
 _client_lock = threading.Lock()
-# Documents process concurrently in FastAPI's threadpool; cap in-flight model
-# calls so a burst of uploads doesn't trip per-minute rate limits.
+# Cap concurrent calls so a burst of uploads doesn't trip per-minute quotas.
 _inflight = threading.BoundedSemaphore(3)
 
 RETRYABLE_CODES = {429, 500, 503}
@@ -28,8 +24,7 @@ _RETRY_HINT = re.compile(r"retry in ([\d.]+)\s*s|retryDelay[':\s]+([\d.]+)s", re
 
 
 def _backoff_seconds(exc: errors.APIError, attempt: int) -> float:
-    """Rate limits come with a server-suggested delay ("Please retry in 36s");
-    honoring it matters on free-tier keys with small per-minute quotas."""
+    # On a 429 the API tells us how long to wait; use that, else exponential.
     if exc.code == 429:
         match = _RETRY_HINT.search(str(exc))
         if match:
@@ -40,9 +35,7 @@ def _backoff_seconds(exc: errors.APIError, attempt: int) -> float:
 
 
 def get_client() -> genai.Client:
-    # Thread-safe lazy singleton: concurrent pipelines must never race the
-    # creation — an orphaned client being garbage-collected can close the
-    # shared transport out from under in-flight requests.
+    # Locked lazy singleton — concurrent pipelines share one client.
     global _client
     if _client is None:
         with _client_lock:
@@ -61,10 +54,9 @@ def generate_structured(
     prompt: str,
     schema: type[BaseModel],
 ) -> BaseModel:
-    """Send document content + prompt, get a validated instance of `schema`.
+    """Return a validated `schema` instance for the document + prompt.
 
-    `content` is ("binary", bytes) for PDF/images (native multimodal input)
-    or ("text", str) for text extracted from DOCX/TXT.
+    content: ("binary", bytes) for PDF/images, ("text", str) for DOCX/TXT.
     """
     kind, payload = content
     if kind == "binary":
@@ -90,7 +82,7 @@ def generate_structured(
             parsed = response.parsed
             if isinstance(parsed, schema):
                 return parsed
-            # Fallback: the SDK failed to parse — validate the raw JSON text.
+            # SDK didn't hand back a parsed object; validate the raw JSON.
             return schema.model_validate_json(response.text)
         except errors.APIError as exc:
             if exc.code in RETRYABLE_CODES and attempt < MAX_ATTEMPTS - 1:

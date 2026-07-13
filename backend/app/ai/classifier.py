@@ -1,8 +1,5 @@
-"""Document type classification (AI step 1).
-
-The allowed-type enum is generated from the registry, so adding a new
-document type automatically extends classification.
-"""
+"""Document-type classification. The allowed-type enum is built from the
+registry, so a new document type extends classification automatically."""
 import enum
 from typing import Union
 

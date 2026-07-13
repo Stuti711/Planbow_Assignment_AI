@@ -11,7 +11,7 @@ load_dotenv(ROOT_DIR / ".env")
 
 class Settings:
     gemini_api_key: str = os.getenv("GEMINI_API_KEY", "")
-    gemini_model: str = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+    gemini_model: str = os.getenv("GEMINI_MODEL", "gemini-3.1-flash-lite")
     confidence_threshold: float = float(os.getenv("CONFIDENCE_THRESHOLD", "0.75"))
     upload_dir: Path = ROOT_DIR / "uploads"
     db_path: Path = ROOT_DIR / "documents.db"

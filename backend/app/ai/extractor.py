@@ -1,10 +1,6 @@
-"""Structured field extraction (AI step 2).
-
-The extraction schema is the document type's Pydantic model, enforced by
-Gemini structured outputs — the response is guaranteed to match the schema.
-The model also self-reports a confidence per top-level field, which the
-review UI uses to flag uncertain values.
-"""
+"""Structured field extraction. The type's Pydantic model is used as the
+Gemini response schema, so output is guaranteed to match it. The model also
+self-reports a confidence per field, which the review UI uses to flag values."""
 from functools import lru_cache
 from typing import Union
 

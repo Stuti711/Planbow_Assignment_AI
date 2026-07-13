@@ -26,12 +26,11 @@ st.set_page_config(page_title="Document Processing Platform", layout="wide")
 
 @st.cache_resource
 def ensure_backend() -> None:
-    """Deployment shim for single-container hosts (Streamlit Community Cloud).
+    """Start the backend if it isn't already reachable.
 
-    Locally the FastAPI backend runs as its own process and this is a no-op.
-    On Community Cloud there is no second process, so if the backend isn't
-    reachable we bridge Streamlit secrets into env vars and start uvicorn
-    inside this container. The UI still talks to it over plain HTTP.
+    Local dev runs uvicorn separately, so this is a no-op. On a single-container
+    host (Streamlit Cloud) there's no second process, so start one here and
+    bridge the deployment secrets into its environment first.
     """
     try:
         httpx.get(f"{API_BASE}/doctypes", timeout=2)
